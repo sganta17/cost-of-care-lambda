@@ -8,6 +8,15 @@ public class Leads {
     public String state;
     public String city;
     public String zipcode;
+    public String utmSource;
+    public String utmMedium;
+    public String utmCampiagn;
+    public String utmTerm;
+    public String utmContent;
+    
+    //Mode of Communication
+    public String commMode;
+    public String leadID;
     
 	public String getLeadName() {
 		return leadName;
@@ -20,6 +29,36 @@ public class Leads {
 	}
 	public void setLeadEmail(String leadEmail) {
 		this.leadEmail = leadEmail;
+	}
+	public String getUtmSource() {
+		return utmSource;
+	}
+	public void setUtmSource(String utmSource) {
+		this.utmSource = utmSource;
+	}
+	public String getUtmMedium() {
+		return utmMedium;
+	}
+	public void setUtmMedium(String utmMedium) {
+		this.utmMedium = utmMedium;
+	}
+	public String getUtmCampiagn() {
+		return utmCampiagn;
+	}
+	public void setUtmCampiagn(String utmCampiagn) {
+		this.utmCampiagn = utmCampiagn;
+	}
+	public String getUtmTerm() {
+		return utmTerm;
+	}
+	public void setUtmTerm(String utmTerm) {
+		this.utmTerm = utmTerm;
+	}
+	public String getUtmContent() {
+		return utmContent;
+	}
+	public void setUtmContent(String utmContent) {
+		this.utmContent = utmContent;
 	}
 	public String getLeadMobile() {
 		return leadMobile;
@@ -50,6 +89,13 @@ public class Leads {
 	}
 	public void setZipcode(String zipcode) {
 		this.zipcode = zipcode;
+	}
+	
+	public String getCommMode() {
+		return commMode;
+	}
+	public void setCommMode(String commMode) {
+		this.commMode = commMode;
 	}
 
 	

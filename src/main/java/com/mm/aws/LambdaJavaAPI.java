@@ -13,6 +13,7 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.common.GatewayResponse;
 import com.common.SmartyValidation;
+import com.external.Sfmc;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -109,7 +110,7 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
      */
     private static String validateAndProcessData(final JSONObject objectEle){
     	
-    	final Leads leads = new Leads();
+    	Leads leads = new Leads();
 		
 
 		final StringBuilder builder = new StringBuilder();
@@ -155,6 +156,8 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
     	}
         
         long start = System.currentTimeMillis();
+        
+        leads = validateUTMParameters(objectEle,leads);
 
     	//Address Validation using Smarty
     	final String address = objectEle.getString("address");
@@ -170,25 +173,52 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
         	leads.zipcode = addressArry[3];
         	
     		if(!isAddressValid){
-        		builder.append("Address is not Valid! /n");
+        	//	builder.append("Address is not Valid! /n");
         	}
     	}else{
-    		builder.append("Address is not Valid! /n");
+    	//	builder.append("Address is not Valid! /n");
     	}
 
+    	final String modeOfComm = objectEle.getString("modeOfComm");
+
+    	if(StringUtils.isBlank(modeOfComm)){
+
+    		builder.append("Mode Of Communication is not Valid! /n");
+    	}else{
+    		leads.commMode = modeOfComm;
+    	}
+    		
     	long end = System.currentTimeMillis();
         float sec = (end - start) / 1000F; 
         System.out.println(sec + " Excution time to validate Address");
 
     	if(StringUtils.isBlank(builder.toString())){
+	        final UUID uuid = UUID.randomUUID();
+    		leads.leadID = uuid.toString();
     		persistData(leads);
+    		Sfmc.postSFMCData(leads);
+
     	}
         
     	return builder.toString();
     }
     
     
-    
+    public static Leads validateUTMParameters(final JSONObject objectEle, final Leads leads){
+    	final String source = objectEle.getString("source");
+    	final String medium = objectEle.getString("medium");
+    	final String campaign = objectEle.getString("campaign");
+    	final String term = objectEle.getString("term");
+    	final String content = objectEle.getString("content");
+    	
+    	leads.utmCampiagn = campaign;
+    	leads.utmTerm = term;
+    	leads.utmContent = content;
+    	leads.utmMedium = medium;
+    	leads.utmSource = source;
+
+    	return leads;
+    }
     
     private static boolean validateWithRegex(final String fieldValue,final String regex,final boolean isFieldMandatory ){
     	
@@ -217,10 +247,9 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
     
     private static PutItemOutcome persistData(final Leads leads) {
     	  final Table table = dynamoDb.getTable(DYNAMO_DB_TABLE_NAME);
-          final UUID uuid = UUID.randomUUID();
 
     	  final PutItemOutcome outcome = table.putItem(new PutItemSpec().withItem(
-    	    new Item().withString("lead_id",uuid.toString())
+    	    new Item().withString("lead_id",leads.toString())
     	               .withString("lead_name", leads.getLeadName())
     	               .withString("lead_email", leads.getLeadEmail())
     	               .withString("lead_mobile", leads.getLeadEmail())
@@ -228,6 +257,12 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
     	               .withString("state", leads.getState())
     	               .withString("street1", leads.getStreet1())
     	               .withString("zipcode", leads.getZipcode())
+    	               .withString("commMode", leads.getCommMode())
+    	               .withString("lead_mobile", leads.getLeadEmail())
+    	               .withString("lead_mobile", leads.getLeadEmail())
+    	               .withString("lead_mobile", leads.getLeadEmail())
+    	               .withString("lead_mobile", leads.getLeadEmail())
+    	               .withString("lead_mobile", leads.getLeadEmail())
     	               ));
     	  return outcome;
    }
