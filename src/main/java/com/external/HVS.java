@@ -17,9 +17,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import com.google.gson.JsonObject;
-import com.pojo.Leads;
 
-public class Sfmc {
+public class HVS {
 	
 	public static String authToken(){
 		try{
@@ -46,16 +45,12 @@ public class Sfmc {
 	        /* End of the fix*/
 
 	        
-			final URL obj = new URL("https://mcp3jpq9-bxqhwnvnnh7l2c82d84.auth.marketingcloudapis.com/v2/token");
-			
-			final JsonObject reqObj = new JsonObject();
-			reqObj.addProperty("grant_type", "client_credentials");
-			reqObj.addProperty("client_id", "mh6lg20p237d7mzsd26byixc");
-			reqObj.addProperty("client_secret", "NAyomMyuBcrqpXR6D2Fnj0nH");
-			reqObj.addProperty("account_id", "100037923");
+			final URL obj = new URL("https://authdev.hvsfinancial.com/Token");
 			
 			
-			final String jsonInputString =  reqObj.toString();
+			final String jsonInputString =  "username=massmutualltcdemo&password=IL19SeO6$H@v3e8*E&grant_type=password";
+			
+			System.out.println(jsonInputString);
 
 			
 			final HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -68,6 +63,8 @@ public class Sfmc {
 
 			
 			int responseCode = con.getResponseCode();
+			
+			System.out.println(responseCode);
 	        
 	       
 			if (responseCode == HttpURLConnection.HTTP_OK) { // success
@@ -91,15 +88,17 @@ public class Sfmc {
 		return "";
 	}
 	
-	public static void postSFMCData(final Leads lead){
+	
+	public static JSONObject getHVSData(final JSONObject objectEle){
 		final String authToken = authToken();
 		if(StringUtils.isNotBlank(authToken)){
-			saveSFMCData(lead,authToken);
+			return pullHVSData(objectEle,authToken);
 		}
-		
+		return null;
 	}
 	
-	public static void saveSFMCData(final Leads lead,final String authToken){
+	
+	public static JSONObject pullHVSData(final JSONObject objectEle,final String authToken){
 		try{
 			
 			
@@ -123,10 +122,10 @@ public class Sfmc {
 	        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
 	        /* End of the fix*/
 
-			final URL obj = new URL("https://mcp3jpq9-bxqhwnvnnh7l2c82d84.rest.marketingcloudapis.com/interaction/v1/events");
+			final URL obj = new URL("https://apidemo.hvsfinancial.com/api/CoreReports/LongTermCareReport");
 			
 			
-			final String jsonInputString =  parseLeadData(lead);
+			final String jsonInputString =  parseInputData();
 			
 			
 			final HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -146,37 +145,63 @@ public class Sfmc {
 	        
 	       
 			if (responseCode == HttpURLConnection.HTTP_OK) { // success
+				BufferedReader in = new BufferedReader(new InputStreamReader(
+						con.getInputStream()));
+				String inputLine;
+				final StringBuffer response = new StringBuffer();
+	
+				while ((inputLine = in.readLine()) != null) {
+					response.append(inputLine);
+				}
+				in.close();
+				return new JSONObject(response.toString());
+				
 			}
 	        
 		}catch(Exception error){
 			error.printStackTrace();
 		}
+		return null;
 	}
 
-	public static String parseLeadData(final Leads lead){
+	public static String parseInputData(){
 	
 		final JsonObject mainObj = new JsonObject();
-		mainObj.addProperty("ContactKey", lead.leadID);
-
-		mainObj.addProperty("EventDefinitionKey","APIEvent-ba2a0c9e-9f02-773a-6a8c-ccc3769dfe66");
 		
-
 		final JsonObject valuesObj = new JsonObject();
-		
-		valuesObj.addProperty("SubscriberKey", lead.leadID);
-		valuesObj.addProperty("LeadID", lead.leadID);
-		
-		valuesObj.addProperty("FirstName", lead.leadName);
-		valuesObj.addProperty("Address_Line_1", lead.street1);
-		valuesObj.addProperty("City", lead.city);
-		valuesObj.addProperty("ZipCode", lead.zipcode);
-		valuesObj.addProperty("EmailAddress", lead.leadEmail);
-		valuesObj.addProperty("PhoneNumber", lead.leadMobile);
-		valuesObj.addProperty("State", lead.state);
-		valuesObj.addProperty("ModeOfCommunication", lead.commMode);
-		valuesObj.addProperty("SubscriberKey", "");
+		valuesObj.addProperty("investmentItems","{\"investmentItems\":[]}");
 
-        mainObj.add("Data", valuesObj);
+		valuesObj.addProperty("FrmHasPartner", false);
+		
+		//Name
+		valuesObj.addProperty("FrmName0", "test");
+		valuesObj.addProperty("FrmName1","");
+		valuesObj.addProperty("FrmGender0",1);
+		valuesObj.addProperty("FrmCurrentAge0",65);
+		valuesObj.addProperty("FrmGender1",0);
+		valuesObj.addProperty("FrmCurrentAge1",0);
+		valuesObj.addProperty("FrmLTCState0","TX");
+		valuesObj.addProperty("FrmHealth0",0);
+		valuesObj.addProperty("FrmHealth1",0);
+		valuesObj.addProperty("FrmLTCState1","");
+		valuesObj.addProperty("FrmPhase1Rate",6);
+		valuesObj.addProperty("FrmPhase1Periods",0);
+		valuesObj.addProperty("FrmPhase2Rate",6);
+		valuesObj.addProperty("FrmPhase2Periods",10);
+		valuesObj.addProperty("FrmPhase3Rate",6);
+		valuesObj.addProperty("FrmLTCMonths0",12);
+		valuesObj.addProperty("FrmLTCMonths1",12);
+		valuesObj.addProperty("FrmPlanningAge0",89);
+		valuesObj.addProperty("FrmPlanningAge1",0);
+		valuesObj.addProperty("MetroRegion0",0);
+		valuesObj.addProperty("MetroRegion1",0);
+		valuesObj.addProperty("InvestmentYears",12);
+		valuesObj.addProperty("InvestmentOption",2);
+		valuesObj.addProperty("CareType",1);
+		valuesObj.addProperty("CareType1",1);
+
+
+        mainObj.add("ltcData", valuesObj);
         System.out.println(mainObj.toString());
         
         return mainObj.toString();

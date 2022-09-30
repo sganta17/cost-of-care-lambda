@@ -1,30 +1,17 @@
 package com.mm.aws;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.common.GatewayResponse;
-import com.common.SmartyValidation;
-import com.external.Sfmc;
+import com.external.HVS;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.pojo.Leads;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -37,9 +24,6 @@ import org.json.JSONObject;
 
 public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
 	  
-	 private static DynamoDB dynamoDb;
-	 private static String DYNAMO_DB_TABLE_NAME = "leads";
-	 private static Regions REGION = Regions.US_EAST_1;
 	 
 	 
 	final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -49,7 +33,7 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
         final LambdaLogger logger = context.getLogger();
         
 
-    	String message = "Saved Successfully!";
+        JSONObject message = null;
     	int responseCode = 200;
     	try{
     		
@@ -63,25 +47,17 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
     		
     		//If it is options return success
     		if(StringUtils.equalsIgnoreCase(httpMethod, "OPTIONS")){
-    			message = "OK";
+    			message = null;
     			responseCode = 200;
     		}else{
-
-    	    	this.initDynamoDbClient();
     		
 	    		final JsonElement element = leadFormData.get("body");
 	    		
 	    		// Converting input object as JSONObject
 	    		final JSONObject objectEle = new JSONObject(element.getAsString());
 	    		
-	    		//JSON Object data validation
-	    		final String validateResponse = validateAndProcessData(objectEle);
+	    		message = HVS.getHVSData(objectEle);
 	    		
-	    		//Executes if there are validation errors 
-	    		if(StringUtils.isNotBlank(validateResponse)){
-	    			message = validateResponse;
-	    			responseCode = 400;
-	    		}	
     		}
     		
     	}catch(Exception e){
@@ -97,143 +73,7 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
         return response;
     }
     
-    private void initDynamoDbClient() {
-    	  AmazonDynamoDBClient client = new AmazonDynamoDBClient();
-    	  client.setRegion(Region.getRegion(REGION));
-    	  dynamoDb = new DynamoDB(client);
-    }
-    
-    /**
-     * 
-     * @param objectEle
-     * @return
-     */
-    private static String validateAndProcessData(final JSONObject objectEle){
-    	
-    	Leads leads = new Leads();
-		
-
-		final StringBuilder builder = new StringBuilder();
-
-		//Email Validation
-		final String email = objectEle.getString("email");
-    	final boolean isEmailValid = validateWithRegex(email,"^[A-Za-z0-9+_.-]+@(.+)$",true);
-    	
-    	if(!isEmailValid){
-    		builder.append("Email is not Valid! /n");
-    	}
-    	leads.leadEmail = email;
-    	
-    	//Name Validation
-		final String name = objectEle.getString("name");
-
-    	final boolean isNameValid = validateWithRegex(name,"^[a-zA-Z0-9'._ -]+$",true);
-    	
-    	if(!isNameValid){
-    		builder.append("Name is not Valid! /n");
-    	}
-    	leads.leadName = name;
-    	
-    	//Mobile Number Validation based on client
-    	final String mobileNumber = objectEle.getString("mobileNumber");
-
-    	boolean isNoValid = true;
-    	
-
-		final String clientname = objectEle.getString("clientname");
-
-        if (StringUtils.equals(clientname, "mmbu")) {
-        	isNoValid = validateWithRegex(mobileNumber,"[\\(]\\d{3}[\\)] \\d{3}[\\-]\\d{4}$",true);
-        } else if (StringUtils.equals(clientname, "mmjebit")) {
-
-        	isNoValid = validateWithRegex(mobileNumber,"[\\(]\\d{3}[\\)] \\d{3}[\\-]\\d{4}$",false);
-        } 
-
-    	leads.leadMobile = mobileNumber;
-
-    	if(!isNoValid){
-    		builder.append("Mobile is not Valid! /n");
-    	}
-        
-        long start = System.currentTimeMillis();
-        
-        leads = validateUTMParameters(objectEle,leads);
-
-    	//Address Validation using Smarty
-    	final String address = objectEle.getString("address");
-    	
-    	if(StringUtils.isNotBlank(address)){
-    		final String addressArry[] = address.split(",");
-    		
-    		boolean isAddressValid = SmartyValidation.addressValidation(addressArry[0], addressArry[1], addressArry[2], addressArry[3]);
-
-        	leads.street1 = addressArry[0];
-        	leads.city = addressArry[1];
-        	leads.state = addressArry[2];
-        	leads.zipcode = addressArry[3];
-        	
-    		if(!isAddressValid){
-        	//	builder.append("Address is not Valid! /n");
-        	}
-    	}else{
-    	//	builder.append("Address is not Valid! /n");
-    	}
-
-    	final String modeOfComm = objectEle.getString("modeOfComm");
-
-    	if(StringUtils.isBlank(modeOfComm)){
-
-    		builder.append("Mode Of Communication is not Valid! /n");
-    	}else{
-    		leads.commMode = modeOfComm;
-    	}
-    		
-    	long end = System.currentTimeMillis();
-        float sec = (end - start) / 1000F; 
-        System.out.println(sec + " Excution time to validate Address");
-
-    	if(StringUtils.isBlank(builder.toString())){
-	        final UUID uuid = UUID.randomUUID();
-    		leads.leadID = uuid.toString();
-    		persistData(leads);
-    		Sfmc.postSFMCData(leads);
-
-    	}
-        
-    	return builder.toString();
-    }
-    
-    
-    public static Leads validateUTMParameters(final JSONObject objectEle, final Leads leads){
-    	final String source = objectEle.getString("source");
-    	final String medium = objectEle.getString("medium");
-    	final String campaign = objectEle.getString("campaign");
-    	final String term = objectEle.getString("term");
-    	final String content = objectEle.getString("content");
-    	
-    	leads.utmCampiagn = campaign;
-    	leads.utmTerm = term;
-    	leads.utmContent = content;
-    	leads.utmMedium = medium;
-    	leads.utmSource = source;
-
-    	return leads;
-    }
-    
-    private static boolean validateWithRegex(final String fieldValue,final String regex,final boolean isFieldMandatory ){
-    	
-    	if(isFieldMandatory && StringUtils.isBlank(fieldValue)){
-    		return false;
-    	}else if(StringUtils.isNotBlank(fieldValue)){
-    		
-	    	final Pattern pattern = Pattern.compile(regex);
-	    	 
-	    	final Matcher matcher = pattern.matcher(fieldValue);
-	    	return matcher.matches();
-    	}
-    	
-    	return true;
-    }
+   
     
     private static Map<String, String> getResponseHeader(){
     	   final Map<String, String> headers = new HashMap<String,String>();
@@ -244,28 +84,7 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
            
            return headers;
     }
-    
-    private static PutItemOutcome persistData(final Leads leads) {
-    	  final Table table = dynamoDb.getTable(DYNAMO_DB_TABLE_NAME);
-
-    	  final PutItemOutcome outcome = table.putItem(new PutItemSpec().withItem(
-    	    new Item().withString("lead_id",leads.toString())
-    	               .withString("lead_name", leads.getLeadName())
-    	               .withString("lead_email", leads.getLeadEmail())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               .withString("city", leads.getCity())
-    	               .withString("state", leads.getState())
-    	               .withString("street1", leads.getStreet1())
-    	               .withString("zipcode", leads.getZipcode())
-    	               .withString("commMode", leads.getCommMode())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               .withString("lead_mobile", leads.getLeadEmail())
-    	               ));
-    	  return outcome;
-   }
+   
 
 	
 }

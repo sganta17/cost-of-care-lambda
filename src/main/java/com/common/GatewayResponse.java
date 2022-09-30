@@ -2,27 +2,29 @@ package com.common;
 
 import java.util.Map;
 
+import org.json.JSONObject;
+
 
 
 public class GatewayResponse {
 
-    private String body;
+    private JSONObject body;
     private Integer statusCode;
     private Map<String, String> headers;
     private boolean isBase64Encoded;
 
-    public GatewayResponse(String body, Integer statusCode, Map<String, String> headers, boolean isBase64Encoded) {
+    public GatewayResponse(JSONObject body, Integer statusCode, Map<String, String> headers, boolean isBase64Encoded) {
         this.body = body;
         this.statusCode = statusCode;
         this.headers = headers;
         this.isBase64Encoded = isBase64Encoded;
     }
 
-    public String getBody() {
+    public JSONObject getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public void setBody(JSONObject body) {
         this.body = body;
     }
 
