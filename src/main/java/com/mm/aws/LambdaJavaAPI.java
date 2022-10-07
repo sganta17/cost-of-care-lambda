@@ -33,18 +33,20 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
         final LambdaLogger logger = context.getLogger();
         
 
-        JSONObject message = null;
+        String message = "Success";
     	int responseCode = 200;
     	try{
     		
     		// Parsing input request
     		final String object = gson.toJson(map);
     		
-    		
+
+    		logger.log("Came inside request  :::exception");
     		final JsonObject leadFormData = gson.fromJson(object, JsonObject.class);
     		    		
     		final String httpMethod = leadFormData.get("httpMethod").getAsString();
-    		
+
+    		logger.log("Came inside request  :::"+httpMethod);
     		//If it is options return success
     		if(StringUtils.equalsIgnoreCase(httpMethod, "OPTIONS")){
     			message = null;
@@ -52,12 +54,17 @@ public class LambdaJavaAPI implements RequestHandler<Object,GatewayResponse> {
     		}else{
     		
 	    		final JsonElement element = leadFormData.get("body");
-	    		
+
+	    		logger.log("Came inside request  :::"+element);
 	    		// Converting input object as JSONObject
-	    		final JSONObject objectEle = new JSONObject(element.getAsString());
+	    		JSONObject objectEle = null;
+	    		if(element != null){
+	    			objectEle = new JSONObject(element.getAsString());
+	    		}
 	    		
-	    		message = HVS.getHVSData(objectEle);
-	    		
+	    		message = HVS.getHVSData(objectEle).toString();
+
+	    		logger.log("Came inside request message  :::"+message);
     		}
     		
     	}catch(Exception e){
