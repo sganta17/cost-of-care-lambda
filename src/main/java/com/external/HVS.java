@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.X509Certificate;
-import java.time.YearMonth;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -179,30 +178,32 @@ public class HVS {
 		valuesObj.addProperty("FrmName1","");
 		valuesObj.addProperty("FrmGender0",1);
 		
-		if(objectEle.has("age")){
-			valuesObj.addProperty("FrmCurrentAge0",objectEle.getString("age"));
-		}else{
+		if(objectEle == null || !objectEle.has("age")){
 			valuesObj.addProperty("FrmCurrentAge0",0);
+			valuesObj.addProperty("FrmPlanningAge0",89);
+		}else{
+			valuesObj.addProperty("FrmCurrentAge0",objectEle.getInt("age"));
+			valuesObj.addProperty("FrmPlanningAge0",89);
 		}
 		
 		valuesObj.addProperty("FrmGender1",0);
 		valuesObj.addProperty("FrmCurrentAge1",0);
 		
-		
-		if(objectEle.has("state")){
-			valuesObj.addProperty("FrmLTCState0",objectEle.getString("state"));
+		if(objectEle == null || !objectEle.has("state")){
+			valuesObj.addProperty("FrmLTCState0",0);
 		}else{
-			valuesObj.addProperty("FrmLTCState0","");
+			valuesObj.addProperty("FrmLTCState0",objectEle.getString("state"));
 		}
+		
 		
 		valuesObj.addProperty("FrmHealth0",0);
 		valuesObj.addProperty("FrmHealth1",0);
 		valuesObj.addProperty("FrmLTCState1","");
 		
-		if(objectEle.has("inflationRate")){
-			valuesObj.addProperty("FrmPhase1Rate",objectEle.getString("inflationRate"));
-		}else{
+		if(objectEle == null || !objectEle.has("inflationRate")){
 			valuesObj.addProperty("FrmPhase1Rate",0);
+		}else{
+			valuesObj.addProperty("FrmPhase1Rate",objectEle.getInt("inflationRate"));
 		}
 		
 		valuesObj.addProperty("FrmPhase1Periods",0);
@@ -211,13 +212,6 @@ public class HVS {
 		valuesObj.addProperty("FrmPhase3Rate",0);
 		valuesObj.addProperty("FrmLTCMonths0",12);
 		valuesObj.addProperty("FrmLTCMonths1",12);
-		
-		int year = YearMonth.now().getYear();
-		
-		System.out.println("Final year"+year);
-
-
-		valuesObj.addProperty("FrmPlanningAge0",0);
 		valuesObj.addProperty("FrmPlanningAge1",0);
 		valuesObj.addProperty("MetroRegion0",0);
 		valuesObj.addProperty("MetroRegion1",0);
