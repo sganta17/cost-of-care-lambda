@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.X509Certificate;
+import java.time.YearMonth;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -125,7 +126,7 @@ public class HVS {
 			final URL obj = new URL("https://apidemo.hvsfinancial.com/api/CoreReports/LongTermCareReport");
 			
 			
-			final String jsonInputString =  parseInputData();
+			final String jsonInputString =  parseInputData(objectEle);
 			
 			
 			final HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -164,7 +165,7 @@ public class HVS {
 		return null;
 	}
 
-	public static String parseInputData(){
+	public static String parseInputData(final JSONObject objectEle){
 	
 		final JsonObject mainObj = new JsonObject();
 		
@@ -177,21 +178,46 @@ public class HVS {
 		valuesObj.addProperty("FrmName0", "test");
 		valuesObj.addProperty("FrmName1","");
 		valuesObj.addProperty("FrmGender0",1);
-		valuesObj.addProperty("FrmCurrentAge0",65);
+		
+		if(objectEle.has("age")){
+			valuesObj.addProperty("FrmCurrentAge0",objectEle.getString("age"));
+		}else{
+			valuesObj.addProperty("FrmCurrentAge0",0);
+		}
+		
 		valuesObj.addProperty("FrmGender1",0);
 		valuesObj.addProperty("FrmCurrentAge1",0);
-		valuesObj.addProperty("FrmLTCState0","TX");
+		
+		
+		if(objectEle.has("state")){
+			valuesObj.addProperty("FrmLTCState0",objectEle.getString("state"));
+		}else{
+			valuesObj.addProperty("FrmLTCState0","");
+		}
+		
 		valuesObj.addProperty("FrmHealth0",0);
 		valuesObj.addProperty("FrmHealth1",0);
 		valuesObj.addProperty("FrmLTCState1","");
-		valuesObj.addProperty("FrmPhase1Rate",6);
+		
+		if(objectEle.has("inflationRate")){
+			valuesObj.addProperty("FrmPhase1Rate",objectEle.getString("inflationRate"));
+		}else{
+			valuesObj.addProperty("FrmPhase1Rate",0);
+		}
+		
 		valuesObj.addProperty("FrmPhase1Periods",0);
-		valuesObj.addProperty("FrmPhase2Rate",6);
-		valuesObj.addProperty("FrmPhase2Periods",10);
-		valuesObj.addProperty("FrmPhase3Rate",6);
+		valuesObj.addProperty("FrmPhase2Rate",0);
+		valuesObj.addProperty("FrmPhase2Periods",0);
+		valuesObj.addProperty("FrmPhase3Rate",0);
 		valuesObj.addProperty("FrmLTCMonths0",12);
 		valuesObj.addProperty("FrmLTCMonths1",12);
-		valuesObj.addProperty("FrmPlanningAge0",89);
+		
+		int year = YearMonth.now().getYear();
+		
+		System.out.println("Final year"+year);
+
+
+		valuesObj.addProperty("FrmPlanningAge0",0);
 		valuesObj.addProperty("FrmPlanningAge1",0);
 		valuesObj.addProperty("MetroRegion0",0);
 		valuesObj.addProperty("MetroRegion1",0);
