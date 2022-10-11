@@ -6,9 +6,10 @@ public class HVSTest {
 	public static void main(String[] args){
 		
 		JSONObject obj = new JSONObject();
-		obj.put("age", 23);
-		obj.put("inflationRate", 3);
 		obj.put("state", "AL");
+		obj.put("futureCost", "2023");
+		obj.put("age", "23");
+		
 		
 		HVS.getHVSData(obj);
 	}

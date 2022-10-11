@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.X509Certificate;
+import java.time.YearMonth;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -182,9 +183,21 @@ public class HVS {
 			valuesObj.addProperty("FrmCurrentAge0",0);
 			valuesObj.addProperty("FrmPlanningAge0",89);
 		}else{
-			valuesObj.addProperty("FrmCurrentAge0",objectEle.getInt("age"));
-			valuesObj.addProperty("FrmPlanningAge0",89);
+			final int age = objectEle.getInt("age");
+			valuesObj.addProperty("FrmCurrentAge0",age);
+			
+
+			if(objectEle == null || !objectEle.has("futureCost")){
+				valuesObj.addProperty("FrmPlanningAge0",89);
+			}else{
+				final int futureCost = objectEle.getInt("futureCost");
+				final int year = YearMonth.now().getYear();
+				final int futureCostAge = age + (futureCost - year);
+				valuesObj.addProperty("FrmPlanningAge0",futureCostAge);
+			}
 		}
+		
+		
 		
 		valuesObj.addProperty("FrmGender1",0);
 		valuesObj.addProperty("FrmCurrentAge1",0);
@@ -201,7 +214,7 @@ public class HVS {
 		valuesObj.addProperty("FrmLTCState1","");
 		
 		if(objectEle == null || !objectEle.has("inflationRate")){
-			valuesObj.addProperty("FrmPhase1Rate",0);
+			valuesObj.addProperty("FrmPhase1Rate",6);
 		}else{
 			valuesObj.addProperty("FrmPhase1Rate",objectEle.getInt("inflationRate"));
 		}
@@ -213,7 +226,12 @@ public class HVS {
 		valuesObj.addProperty("FrmLTCMonths0",12);
 		valuesObj.addProperty("FrmLTCMonths1",12);
 		valuesObj.addProperty("FrmPlanningAge1",0);
-		valuesObj.addProperty("MetroRegion0",0);
+		
+		if(objectEle == null || !objectEle.has("region")){
+			valuesObj.addProperty("MetroRegion0",0);
+		}else{
+			valuesObj.addProperty("MetroRegion0",objectEle.getInt("region"));
+		}
 		valuesObj.addProperty("MetroRegion1",0);
 		valuesObj.addProperty("InvestmentYears",12);
 		valuesObj.addProperty("InvestmentOption",2);
