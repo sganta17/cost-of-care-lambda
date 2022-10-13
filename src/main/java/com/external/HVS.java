@@ -51,7 +51,6 @@ public class HVS {
 			
 			final String jsonInputString =  "username=massmutualltcdemo&password=IL19SeO6$H@v3e8*E&grant_type=password";
 			
-			System.out.println(jsonInputString);
 
 			
 			final HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -65,7 +64,6 @@ public class HVS {
 			
 			int responseCode = con.getResponseCode();
 			
-			System.out.println(responseCode);
 	        
 	       
 			if (responseCode == HttpURLConnection.HTTP_OK) { // success
@@ -142,7 +140,6 @@ public class HVS {
 			
 			int responseCode = con.getResponseCode();
 			
-			System.out.println("Final response"+responseCode);
 	        
 	       
 			if (responseCode == HttpURLConnection.HTTP_OK) { // success
@@ -179,6 +176,8 @@ public class HVS {
 		valuesObj.addProperty("FrmName1","");
 		valuesObj.addProperty("FrmGender0",1);
 		
+		int investYears= 1;
+		
 		if(objectEle == null || !objectEle.has("age")){
 			valuesObj.addProperty("FrmCurrentAge0",0);
 			valuesObj.addProperty("FrmPlanningAge0",89);
@@ -192,7 +191,8 @@ public class HVS {
 			}else{
 				final int futureCost = objectEle.getInt("futureCost");
 				final int year = YearMonth.now().getYear();
-				final int futureCostAge = age + (futureCost - year);
+				investYears = (futureCost - year);
+				final int futureCostAge = age +investYears;
 				valuesObj.addProperty("FrmPlanningAge0",futureCostAge);
 			}
 		}
@@ -233,14 +233,13 @@ public class HVS {
 			valuesObj.addProperty("MetroRegion0",objectEle.getInt("region"));
 		}
 		valuesObj.addProperty("MetroRegion1",0);
-		valuesObj.addProperty("InvestmentYears",12);
+		valuesObj.addProperty("InvestmentYears",investYears);
 		valuesObj.addProperty("InvestmentOption",2);
 		valuesObj.addProperty("CareType",1);
 		valuesObj.addProperty("CareType1",1);
 
 
         mainObj.add("ltcData", valuesObj);
-        System.out.println(mainObj.toString());
         
         return mainObj.toString();
 		
